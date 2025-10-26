@@ -62,16 +62,20 @@ export default function LoginForm({ activeView, onLogin, onRegister, onSwitchVie
             ) : (
               <form onSubmit={onRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Имя</Label>
-                  <Input id="name" placeholder="Иван Иванов" required />
+                  <Label htmlFor="username">Имя пользователя</Label>
+                  <Input id="username" name="username" placeholder="username" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Полное имя</Label>
+                  <Input id="name" name="name" placeholder="Иван Иванов" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reg-email">Email</Label>
-                  <Input id="reg-email" type="email" placeholder="example@email.com" required />
+                  <Input id="reg-email" name="reg-email" type="email" placeholder="example@email.com" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reg-password">Пароль</Label>
-                  <Input id="reg-password" type="password" required />
+                  <Input id="reg-password" name="reg-password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
                   Создать аккаунт

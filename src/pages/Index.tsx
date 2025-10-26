@@ -27,78 +27,107 @@ interface Transaction {
   status: 'completed' | 'pending';
 }
 
+const AUTH_API = 'https://functions.poehali.dev/920a2dcf-5083-486d-b287-86ac496b21f0';
+
 export default function Index() {
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeView, setActiveView] = useState<'login' | 'register' | 'dashboard'>('login');
   const [currentUser, setCurrentUser] = useState('');
+  const [userId, setUserId] = useState<number | null>(null);
   
-  const [cards, setCards] = useState<BankCard[]>([
-    {
-      id: '1',
-      number: '4532 •••• •••• 8901',
-      balance: 125430.50,
-      type: 'virtual',
-      color: 'from-purple-500 to-pink-500',
-      owner: 'Алексей Иванов'
-    },
-    {
-      id: '2',
-      number: '5421 •••• •••• 3456',
-      balance: 48250.00,
-      type: 'physical',
-      color: 'from-blue-500 to-cyan-500',
-      owner: 'Алексей Иванов'
-    }
-  ]);
-
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: '1', type: 'incoming', amount: 15000, recipient: 'Мария Петрова', date: '2025-10-26 14:30', status: 'completed' },
-    { id: '2', type: 'outgoing', amount: 3200, recipient: 'Ozon', date: '2025-10-26 12:15', status: 'completed' },
-    { id: '3', type: 'outgoing', amount: 850, recipient: 'Starbucks', date: '2025-10-25 18:45', status: 'completed' },
-    { id: '4', type: 'incoming', amount: 52000, recipient: 'Зарплата', date: '2025-10-25 09:00', status: 'completed' },
-  ]);
+  const [cards, setCards] = useState<BankCard[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [transferAmount, setTransferAmount] = useState('');
   const [transferRecipient, setTransferRecipient] = useState('');
   const [selectedCard, setSelectedCard] = useState('1');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get('email') as string;
+    const username = formData.get('email') as string;
     const password = formData.get('password') as string;
     
-    if (email === 'XeX' && password === '18181818') {
-      setIsLoggedIn(true);
-      setIsAdmin(true);
-      setCurrentUser('XeX');
-      setActiveView('dashboard');
-      toast({
-        title: "Добро пожаловать, Администратор! 👑",
-        description: "Вы вошли с правами администратора",
+    try {
+      const response = await fetch(AUTH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', username, password })
       });
-    } else {
-      setIsLoggedIn(true);
-      setIsAdmin(false);
-      setCurrentUser(email);
-      setActiveView('dashboard');
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setIsLoggedIn(true);
+        setIsAdmin(data.user.is_admin);
+        setCurrentUser(data.user.username);
+        setUserId(data.user.id);
+        setActiveView('dashboard');
+        
+        toast({
+          title: data.user.is_admin ? "Добро пожаловать, Администратор! 👑" : "Добро пожаловать! 👋",
+          description: data.user.is_admin ? "Вы вошли с правами администратора" : "Вы успешно вошли в систему",
+        });
+      } else {
+        toast({
+          title: "Ошибка входа",
+          description: data.error || "Неверные учетные данные",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Добро пожаловать! 👋",
-        description: "Вы успешно вошли в систему",
+        title: "Ошибка",
+        description: "Не удалось подключиться к серверу",
+        variant: "destructive",
       });
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoggedIn(true);
-    setActiveView('dashboard');
-    toast({
-      title: "Регистрация завершена! 🎉",
-      description: "Ваш аккаунт успешно создан",
-    });
+    const formData = new FormData(e.target as HTMLFormElement);
+    const username = formData.get('username') as string;
+    const email = formData.get('reg-email') as string;
+    const password = formData.get('reg-password') as string;
+    const full_name = formData.get('name') as string;
+    
+    try {
+      const response = await fetch(AUTH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'register', username, email, password, full_name })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setIsLoggedIn(true);
+        setIsAdmin(data.user.is_admin);
+        setCurrentUser(data.user.username);
+        setUserId(data.user.id);
+        setActiveView('dashboard');
+        
+        toast({
+          title: "Регистрация завершена! 🎉",
+          description: "Ваш аккаунт успешно создан",
+        });
+      } else {
+        toast({
+          title: "Ошибка регистрации",
+          description: data.error || "Пользователь уже существует",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось подключиться к серверу",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTransfer = () => {
