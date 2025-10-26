@@ -45,9 +45,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 username = body_data.get('username')
                 email = body_data.get('email')
                 password = body_data.get('password')
-                full_name = body_data.get('full_name', '')
+                first_name = body_data.get('first_name', '')
+                last_name = body_data.get('last_name', '')
+                phone = body_data.get('phone', '')
+                birth_year = body_data.get('birth_year')
                 
-                if not username or not email or not password:
+                if not username or not email or not password or not first_name or not last_name or not phone or not birth_year:
                     return {
                         'statusCode': 400,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -55,8 +58,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cursor.execute(
-                    "SELECT id FROM users WHERE username = %s OR email = %s",
-                    (username, email)
+                    "SELECT id FROM users WHERE username = %s OR email = %s OR phone = %s",
+                    (username, email, phone)
                 )
                 existing_user = cursor.fetchone()
                 
@@ -68,9 +71,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 cursor.execute(
-                    """INSERT INTO users (username, email, password_hash, full_name, is_admin) 
-                       VALUES (%s, %s, %s, %s, %s) RETURNING id, username, email, full_name, is_admin""",
-                    (username, email, password, full_name, False)
+                    """INSERT INTO users (username, email, password_hash, first_name, last_name, phone, birth_year, is_admin) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
+                       RETURNING id, username, email, first_name, last_name, phone, birth_year, is_admin""",
+                    (username, email, password, first_name, last_name, phone, birth_year, False)
                 )
                 new_user = cursor.fetchone()
                 conn.commit()
