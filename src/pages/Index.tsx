@@ -32,8 +32,9 @@ interface Transaction {
 export default function Index() {
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [activeView, setActiveView] = useState<'login' | 'register' | 'dashboard'>('login');
+  const [currentUser, setCurrentUser] = useState('');
   
   const [cards, setCards] = useState<BankCard[]>([
     {
@@ -67,12 +68,29 @@ export default function Index() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoggedIn(true);
-    setActiveView('dashboard');
-    toast({
-      title: "Добро пожаловать! 👋",
-      description: "Вы успешно вошли в систему",
-    });
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    
+    if (email === 'XeX' && password === '18181818') {
+      setIsLoggedIn(true);
+      setIsAdmin(true);
+      setCurrentUser('XeX');
+      setActiveView('dashboard');
+      toast({
+        title: "Добро пожаловать, Администратор! 👑",
+        description: "Вы вошли с правами администратора",
+      });
+    } else {
+      setIsLoggedIn(true);
+      setIsAdmin(false);
+      setCurrentUser(email);
+      setActiveView('dashboard');
+      toast({
+        title: "Добро пожаловать! 👋",
+        description: "Вы успешно вошли в систему",
+      });
+    }
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -173,12 +191,12 @@ export default function Index() {
               {activeView === 'login' ? (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="example@email.com" required />
+                    <Label htmlFor="email">Email или логин</Label>
+                    <Input id="email" name="email" placeholder="example@email.com" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Пароль</Label>
-                    <Input id="password" type="password" required />
+                    <Input id="password" name="password" type="password" required />
                   </div>
                   <Button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
                     Войти
